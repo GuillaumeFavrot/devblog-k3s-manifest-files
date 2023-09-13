@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devblog-postgres-deployment
+  labels:
+    app: deblog-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deblog-postgres
+  template:
+    metadata:
+      labels:
+        app: deblog-postgres
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: deblog-postgres
+        image: postgres:13-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: deblog-db
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: devblog-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devblog-secret
+              key: POSTGRES_PASSWORD
+        volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: devblog-postgres-data
+      volumes:
+        - name: devblog-postgres-data
+          persistentVolumeClaim:
+            claimName: devblog-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devblog-postgres-service
+spec:
+  selector:
+    app: deblog-postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devblog-app-deployment
+  labels:
+    app: devblog-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devblog-app
+  template:
+    metadata:
+      labels:
+        app: devblog-app
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: devblog-app
+        image: guthan/devblog-app
+        ports:
+        - containerPort: 8000
+        env:
+        #Django settings variables
+        ##Secrets
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: devblog-secret
+              key: DJANGO_SECRET_KEY
+        ##Configs
+        - name: ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              name: devblog-configmap
+              key: ALLOWED_HOSTS
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: devblog-configmap
+              key: ALLOWED_ORIGINS
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: devblog-configmap
+              key: DEBUG
+        #Postgres settings variables
+        ##Secrets
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: devblog-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devblog-secret
+              key: POSTGRES_PASSWORD
+        ##Configs
+        - name: DATABASE
+          valueFrom: 
+            configMapKeyRef:
+              name: devblog-configmap
+              key: DATABASE
+        - name: DATABASE_URL
+          valueFrom: 
+            configMapKeyRef:
+              name: devblog-configmap
+              key: DATABASE_URL     
+        - name: POSTGRES_DB
+          valueFrom: 
+            configMapKeyRef:
+              name: devblog-configmap
+              key: POSTGRES_DB
+        - name: SQL_HOST
+          valueFrom: 
+            configMapKeyRef:
+              name: devblog-configmap
+              key: SQL_HOST
+        - name: SQL_PORT
+          valueFrom: 
+            configMapKeyRef:
+              name: devblog-configmap
+              key: SQL_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devblog-app-service
+spec:
+  selector:
+    app: devblog-app
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

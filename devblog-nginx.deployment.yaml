@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devblog-nginx-deployment
+  labels:
+    app: devblog-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devblog-nginx
+  template:
+    metadata:
+      labels:
+        app: devblog-nginx
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: guthan/devblog-nginx
+          name: devblog-nginx
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devblog-nginx-service
+spec:
+  selector:
+    app: devblog-nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30000
